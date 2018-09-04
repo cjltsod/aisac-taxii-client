@@ -5,6 +5,10 @@ import os
 import pytz
 import re
 import logging
+try:
+    import xmltodict as xmltodict_lib
+except ImportError:
+    pass
 
 
 class AisacClient(cabby.Client11):
@@ -116,7 +120,7 @@ class AisacClient(cabby.Client11):
                     if as_xml:
                         value = block.raw.to_xml()
                         if xmltodict:
-                            value = xmltodict.parse(value)
+                            value = xmltodict_lib.parse(value)
                     else:
                         value = block.raw.to_text()
                 else:
@@ -135,8 +139,9 @@ def create_client(username, password,
                   host='taxii.aisac.tw', port=443, discovery_path='/services/discovery', use_https=True,
                   headers=None,
                   ):
-    if username.lower() in ['tacert', 'ncc', 'nccst', 'mtsg']:
-        discovery_path = '/services/{}/discovery'.format(username.lower())
+    for each_prefix in ['tacert', 'ncc', 'nccst', 'mtsg']:
+        if username.lower() == each_prefix or username.lower().startswith('{}_'.format(each_prefix)):
+            discovery_path = '/services/{}/discovery'.format(each_prefix)
 
     params = dict(
         host=host,
